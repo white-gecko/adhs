@@ -1,6 +1,9 @@
 from flask import Response, render_template, Markup
+from rdflib.plugins import sparql
 
 def get_response(qres, output):
+    if qres == None:
+        return Response("ignored", content_type=output)
     if output == 'application/sparql-results+json':
         return Response(
                 qres.serialize(format='json').decode('utf-8'),
@@ -12,8 +15,26 @@ def get_response(qres, output):
         return Response(
                 qres.serialize(format='xml').decode('utf-8'),
                 content_type='application/sparql-results+xml')
+    elif output == 'application/rdf+xml':
+        return Response(
+                qres.serialize(format='xml').decode('utf-8'),
+                content_type='application/rdf+xml')
 
     else:
+        return None
+
+def execute_query(query, g):
+    try:
+        parsedQuery = sparql.processor.prepareQuery(query)
+        if str(parsedQuery.algebra.name) in ['ConstructQuery', 'SelectQuery', 'AskQuery']:
+            return g.query(parsedQuery)
+        else:
+            # Other types, e.g. DESCRIBE have to be ignored. DESCRIBE is not supported by RDFlib
+            return None
+    except:
+        print "update"
+        parsedQuery = sparql.processor.prepareUpdate(query)
+        g.update(parsedQuery)
         return None
 
 def html_serialize(result):

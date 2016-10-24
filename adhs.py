@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, Response
 from flask.ext.cors import CORS
 from flask_negotiate import consumes, produces
 from adhs_response import *
@@ -30,7 +30,7 @@ parser.add_argument('-i', '--input', default='guess', choices=[
 args = parser.parse_args()
 
 # doesn't seem right to include */* ?
-_FORMATS = ['*/*', 'text/html', 'application/sparql-results+json', 'application/sparql-results+xml']
+_FORMATS = ['*/*', 'text/html', 'application/sparql-results+json', 'application/sparql-results+xml', 'application/rdf+xml']
 
 # new graph
 g = rdflib.Graph()
@@ -56,12 +56,16 @@ def index():
 @app.route("/sparql", methods=['GET'])
 @produces(*_FORMATS)
 def sparql_get():
-    if 'query' in request.args:
+    if 'query' in request.args or 'update' in request.args:
         content = content_override(request.args)
         if content == None:
             content = get_pref_content_type(request)
-        qres = g.query(request.args['query'])
-        return get_response(qres, content)
+        try:
+            qres = execute_query(request.args['query'], g)
+            return get_response(qres, content)
+        except Exception as e:
+            print("Exception: ", e)
+            return Response("exception")
     else:
         return render_template('sparql.html', src=args.file, port=request.host)
 
@@ -69,12 +73,16 @@ def sparql_get():
 @consumes('application/x-www-form-urlencoded')
 @produces(*_FORMATS)
 def sparql_post():
-    if 'query' in request.form:
+    if 'query' in request.form or 'update' in request.form:
         content = content_override(request.form)
         if content == None:
             content = get_pref_content_type(request)
-        qres = g.query(request.form['query'])
-        return get_response(qres, content)
+        try:
+            qres = execute_query(request.form['query'], g)
+            return get_response(qres, content)
+        except Exception as e:
+            print("Exception: ", e)
+            return Response("exception")
     else:
         return render_template('sparql.html', src=args.file, port=request.host)
 
@@ -97,4 +105,3 @@ def get_pref_content_type(request):
 
 if __name__ == "__main__":
     app.run(host=args.host,port=args.port)
-
