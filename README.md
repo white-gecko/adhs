@@ -14,10 +14,21 @@ pip install -r requirements.txt
 
 ### Usage
 
+#### Run in develop mode ####
+
 Example:
 ```
-./adhs.py file.ttl -i turtle -p 5000
+python adhs/adhs.py --file file.ttl -i turtle -p 5000
 ```
+
+#### Run in production mode with uswsgi ####
+
+To start ADHS with uwsgi you can use the following line
+
+```
+uwsgi --socket 0.0.0.0:5000 --protocol=http -w adhs.run --pyargv "--file file.nq -vv "
+```
+
 
 The `-i` parameter is optional but should be used to specify the format of the file. If it's missing, `rdflib.util.guess_format()` will be used.
 
@@ -62,6 +73,8 @@ Additionally, the _accept type_ can also be set with the `format` (or alternativ
 If no accept type is specified, the default type is `text/html` unless it's overridden with `format` or `output`. When an _accept type_ is set via content negotiation and as well with the `format` or `output` parameter, the parameter takes precedence over the content negotiation.
 
 ### Docker Image
+
+Currently not working in this branch
 
 adhs is also available as an automatic image build at hub.docker.com, so you can serve a local file with the following docker command:
 

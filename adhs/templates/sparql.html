@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!-- <title>adhs for {{src}}</title> -->
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/yasqe.min.css') }}" />
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/yasr.min.css') }}" />
+</head>
+
+<body>
+    <h1>Ad-hoc SPARQL endpoint for {{src}}</h1>
+    <div id="yasqe"></div>
+    <div id="yasr"></div>
+      <script src="http://cdn.jsdelivr.net/yasqe/2.2/yasqe.bundled.min.js"></script>
+      <script src="http://cdn.jsdelivr.net/yasr/2.4/yasr.bundled.min.js"></script>
+      <script>
+        var yasqe = YASQE(document.getElementById("yasqe"), {
+          createShareLink: null,
+          value: 'SELECT * WHERE {\n GRAPH ?graph {\n   ?sub ?pred ?obj .\n }\n} \nLIMIT 10',
+          sparql: {
+            showQueryButton: true,
+            endpoint: '{{ host }}/sparql'
+          }
+          });
+        var yasr = YASR(document.getElementById("yasr"), {
+          getUsedPrefixes: yasqe.getPrefixesFromQuery,
+          outputPlugins: ["error", "boolean", "rawResponse", "table"]
+        });
+
+        //link both together
+        yasqe.options.sparql.callbacks.complete = yasr.setResponse;
+      </script>
+</body>
+</html>
