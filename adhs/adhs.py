@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 from flask import Flask, request, render_template, redirect, make_response
-from flask.ext.cors import CORS
+from flask_cors import CORS
 # from flask_negotiate import consumes, produces
 # from adhs_response import *
 import rdflib
